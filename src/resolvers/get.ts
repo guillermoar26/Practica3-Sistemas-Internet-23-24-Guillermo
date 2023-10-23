@@ -1,3 +1,4 @@
+import { ObjectId } from "mongoose";
 import { CharacterModel, CharacterModelType } from "../db/character.ts";
 import { LocationModel, LocationModelType } from "../db/location.ts";
 import { Request, Response } from "express";
@@ -10,8 +11,24 @@ export const getCharacter = async (req: Request, res: Response): Promise<void> =
         }
         const exists = await CharacterModel.findOne({ id }).exec();
         if (exists) {
-            res.send(exists);
+            const {
+                _id,
+                __v,
+                ...char
+            } = exists.toObject() as CharacterModelType & { _id: ObjectId; __v: number };
+            const characterSorted = {
+                "id": char.id,
+                "name": char.name,
+                "status": char.status,
+                "species": char.species,
+                "gender": char.gender,
+                "origin": char.origin,
+                "location": char.location,
+                "created": char.created,
+            }
+            res.json(characterSorted);
         } else {
+
             const response = await fetch(
                 `https://rickandmortyapi.com/api/character/${id}`,
             );
@@ -53,7 +70,12 @@ export const getLocation = async (req: Request, res: Response): Promise<void> =>
         }
         const exists = await LocationModel.findOne({ id }).exec();
         if (exists) {
-            res.send(exists);
+            const {
+                _id,
+                __v,
+                ...loc
+            } = exists.toObject() as CharacterModelType & { _id: ObjectId; __v: number };
+            res.json(loc);
         } else {
             const response = await fetch(
                 `https://rickandmortyapi.com/api/location/${id}`,
