@@ -1,4 +1,3 @@
-import { ObjectId } from "mongoose";
 import { CharacterModel, CharacterModelType } from "../db/character.ts";
 import { LocationModel, LocationModelType } from "../db/location.ts";
 import { Request, Response } from "express";
@@ -11,24 +10,17 @@ export const getCharacter = async (req: Request, res: Response): Promise<void> =
         }
         const exists = await CharacterModel.findOne({ id }).exec();
         if (exists) {
-            const {
-                _id,
-                __v,
-                ...char
-            } = exists.toObject() as CharacterModelType & { _id: ObjectId; __v: number };
-            const characterSorted = {
-                "id": char.id,
-                "name": char.name,
-                "status": char.status,
-                "species": char.species,
-                "gender": char.gender,
-                "origin": char.origin,
-                "location": char.location,
-                "created": char.created,
-            }
-            res.json(characterSorted);
+            res.status(200).send({
+                id: exists.id,
+                name: exists.name,
+                status: exists.status,
+                species: exists.species,
+                gender: exists.gender,
+                origin: exists.origin,
+                location: exists.location,
+                created: exists.created,
+            });
         } else {
-
             const response = await fetch(
                 `https://rickandmortyapi.com/api/character/${id}`,
             );
@@ -53,7 +45,10 @@ export const getCharacter = async (req: Request, res: Response): Promise<void> =
             });
 
             await newcharacter.save();
-            res.send(newcharacter);
+            const newLocationObject = newcharacter.toObject();
+            delete newLocationObject._id; delete newLocationObject.__v;
+
+            res.status(200).send(newLocationObject);
         }
     } catch {
         res.status(500).send("Error fetching specified character");
@@ -70,12 +65,13 @@ export const getLocation = async (req: Request, res: Response): Promise<void> =>
         }
         const exists = await LocationModel.findOne({ id }).exec();
         if (exists) {
-            const {
-                _id,
-                __v,
-                ...loc
-            } = exists.toObject() as CharacterModelType & { _id: ObjectId; __v: number };
-            res.json(loc);
+            res.status(200).send({
+                id: exists.id,
+                name: exists.name,
+                type: exists.type,
+                dimension: exists.dimension,
+                created: exists.created,
+            });
         } else {
             const response = await fetch(
                 `https://rickandmortyapi.com/api/location/${id}`,
@@ -89,6 +85,7 @@ export const getLocation = async (req: Request, res: Response): Promise<void> =>
             const data: LocationModelType = await response.json();
             const { name, type, dimension, created } = data;
 
+
             const newlocation = new LocationModel({
                 id,
                 name,
@@ -98,7 +95,10 @@ export const getLocation = async (req: Request, res: Response): Promise<void> =>
             });
 
             await newlocation.save();
-            res.send(newlocation);
+            const newLocationObject = newlocation.toObject();
+            delete newLocationObject._id; delete newLocationObject.__v;
+
+            res.status(200).send(newLocationObject);
         }
     } catch {
         res.status(500).send("Error fetching specified location");
@@ -118,8 +118,9 @@ export const getAllCharacters = async (req: Request, res: Response): Promise<voi
             `https://rickandmortyapi.com/api/character/?page=${page}`,
         );
 
-        const data: CharacterModelType = await response.json();
-        res.status(200).send(data);
+        const data = await response.json();
+        const names = data.results.map((character: CharacterModelType): string => character.name);
+        res.status(200).send(names);
     } catch {
         res.status(500).send("Error fetching all characters");
         return;
@@ -138,8 +139,9 @@ export const getAllLocations = async (req: Request, res: Response): Promise<void
             `https://rickandmortyapi.com/api/location/?page=${page}`,
         );
 
-        const data: LocationModelType = await response.json();
-        res.status(200).send(data);
+        const data = await response.json();
+        const names = data.results.map((locations: LocationModelType): string => locations.name);
+        res.status(200).send(names);
     } catch {
         res.status(500).send("Error fetching all locations");
         return;

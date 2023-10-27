@@ -1,5 +1,5 @@
-import { CharacterModel } from "../db/character.ts";
-import { LocationModel } from "../db/location.ts";
+import { CharacterModel, CharacterModelType } from "../db/character.ts";
+import { LocationModel, LocationModelType } from "../db/location.ts";
 import { Request, Response } from "express";
 
 export const filterCharactersByStatus = async (req: Request, res: Response): Promise<void> => {
@@ -12,15 +12,28 @@ export const filterCharactersByStatus = async (req: Request, res: Response): Pro
         const validStatus: string[] = ["Alive", "Dead", "unknown"];
         if (!validStatus.includes(statusSort)) {
             res.status(400).send("Invalid status. Make sure its well written");
+            return;
         }
         const found = await CharacterModel.find({ status: statusSort }).exec();
         if (found.length > 0) {
-            res.status(200).send(found);
+            const result = found.map((character: CharacterModelType): CharacterModelType => ({
+                id: character.id,
+                name: character.name,
+                status: character.status,
+                species: character.species,
+                gender: character.gender,
+                origin: character.origin,
+                location: character.location,
+                created: character.created
+            }));
+            res.status(200).send(result);
+        } else {
+            res.status(404).send("No characters found in database with that status");
         }
-        res.status(404).send("No characters found in database with that status");
+
     } catch {
         res.status(500).send("Error getting filtered characters by status");
-
+        return;
     }
 };
 
@@ -34,15 +47,26 @@ export const filterCharactersByGender = async (req: Request, res: Response): Pro
         const validGenders: string[] = ["Female", "Male", "Genderless", "unknown"];
         if (!validGenders.includes(genderSort)) {
             res.status(400).send("Invalid gender. Make sure its well written");
+            return;
         }
         const found = await CharacterModel.find({ gender: genderSort }).exec();
         if (found.length > 0) {
-            res.status(200).send(found);
+            const result = found.map((character: CharacterModelType): CharacterModelType => ({
+                id: character.id,
+                name: character.name,
+                status: character.status,
+                species: character.species,
+                gender: character.gender,
+                origin: character.origin,
+                location: character.location,
+                created: character.created
+            }));
+            res.status(200).send(result);
         }
         res.status(404).send("No characters found in database with that gender");
     } catch {
         res.status(500).send("Error getting filtered characters by gender");
-
+        return;
     }
 };
 
@@ -55,12 +79,19 @@ export const filterLocationsByType = async (req: Request, res: Response): Promis
         }
         const found = await LocationModel.find({ type: typeSort }).exec();
         if (found.length > 0) {
-            res.status(200).send(found);
+            const result = found.map((location: LocationModelType): LocationModelType => ({
+                id: location.id,
+                name: location.name,
+                type: location.type,
+                dimension: location.dimension,
+                created: location.created
+            }));
+            res.status(200).send(result);
         }
         res.status(404).send("No locations found in database with that type");
     } catch {
         res.status(500).send("Error getting filtered locations by type");
-
+        return;
     }
 };
 
@@ -73,11 +104,18 @@ export const filterLocationsByDimension = async (req: Request, res: Response): P
         }
         const found = await LocationModel.find({ dimension: dimensionSort }).exec();
         if (found.length > 0) {
-            res.status(200).send(found);
+            const result = found.map((location: LocationModelType): LocationModelType => ({
+                id: location.id,
+                name: location.name,
+                type: location.type,
+                dimension: location.dimension,
+                created: location.created
+            }));
+            res.status(200).send(result);
         }
         res.status(404).send("No locations found in database with that dimension");
     } catch {
         res.status(500).send("Error getting filtered locations by dimension");
-
+        return;
     }
 };
